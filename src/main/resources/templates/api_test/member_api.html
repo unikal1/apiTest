@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Member API Test</title>
+    <style>
+        .api-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .api-list {
+            width: 30%;
+            border-right: 1px solid #ccc;
+            padding-right: 20px;
+        }
+
+        .api-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .api-list ul li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .api-list ul li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .api-list ul li.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .api-details {
+            width: 70%;
+            padding-left: 20px;
+        }
+
+        .api-details .json-block {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+        }
+
+        .api-details .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .api-details .button.send {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .api-details .button.validate {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .api-details .response {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px; /* 스크롤이 필요할 경우 */
+            overflow-y: auto;
+            color: #333;
+        }
+
+        .api-details .validation-success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .api-details .validation-failure {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-code {
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        let selectedApiTitle = '';
+
+        function displayApiDetails(api, element) {
+            selectedApiTitle = api.title; // Store the selected API title for later use
+            document.getElementById('apiTitle').textContent = api.title;
+            document.getElementById('apiUrl').textContent = api.url;
+            document.getElementById('apiMethod').textContent = api.method;
+            document.getElementById('apiAuth').textContent = api.isauth === 'true' ? 'Yes' : 'No';
+            document.getElementById('apiBody').textContent = api.body;
+            document.getElementById('apiResponse').textContent = api.expectedresponse;
+            document.getElementById('apiNote').textContent = api.note;
+
+            // Remove 'active' class from all list items
+            var listItems = document.querySelectorAll('.api-list ul li');
+            var listItems = document.querySelectorAll('.api-list ul li');
+            listItems.forEach(item => item.classList.remove('active'));
+
+            // Add 'active' class to the clicked item
+            element.classList.add('active');
+        }
+
+        function sendRequest() {
+            if (!selectedApiTitle) {
+                alert('Please select an API first.');
+                return;
+            }
+
+            const url = `/request?title=${encodeURIComponent(selectedApiTitle)}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // 상태 코드와 응답 본문 분리
+                    const statusCode = data.code;
+                    const statusBody = data.response;
+
+
+                    // 상태 코드를 출력
+                    document.getElementById('responseBody').innerHTML = `<div class="status-code">Status Code: ${statusCode}</div>`;
+
+                    // JSON인지 확인하여 예쁘게 출력
+                    if (statusBody.trim().startsWith('{') && statusBody.trim().endsWith('}')) {
+                        try {
+                            const jsonObject = JSON.parse(statusBody);
+                            const formattedJson = JSON.stringify(jsonObject, null, 2);
+                            document.getElementById('responseBody').innerHTML += `<pre>${formattedJson}</pre>`;
+                        } catch (e) {
+                            document.getElementById('responseBody').innerHTML += `<div>${statusBody}</div>`;
+                        }
+                    } else {
+                        // JSON이 아닌 경우 그대로 출력
+                        document.getElementById('responseBody').innerHTML += `<div>${statusBody}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('responseBody').textContent = 'Error: ' + error;
+                });
+        }
+
+        function validateResponse() {
+            // Validation logic can be added here
+            let validationResult = document.getElementById('validationResult');
+            validationResult.textContent = '검증 성공!'; // 또는 '검증 실패!'
+            validationResult.className = 'validation-success'; // 또는 'validation-failure'
+        }
+    </script>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="api-container">
+        <!-- 왼쪽: API 목록 -->
+        <div class="api-list">
+            <ul>
+                <li th:each="api : ${apiList}"
+                    th:data-title="${api.title}"
+                    th:data-url="${api.url}"
+                    th:data-method="${api.method}"
+                    th:data-isauth="${api.isAuth}"
+                    th:data-body="${api.body}"
+                    th:data-expectedresponse="${api.expectedResponse}"
+                    th:data-note="${api.note}"
+                    onclick="displayApiDetails(this.dataset, this)">
+                    <span th:text="${api.title}"></span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 오른쪽: API 상세 정보 -->
+        <div class="api-details">
+            <h3 id="apiTitle">API Name</h3>
+            <p><strong>URL:</strong> <span id="apiUrl">/register</span></p>
+            <p><strong>Method:</strong> <span id="apiMethod">POST</span></p>
+            <p><strong>Is Auth Required:</strong> <span id="apiAuth">No</span></p>
+            <p><strong>Body:</strong></p>
+            <div class="json-block" id="apiBody">{
+                "username": "username"
+                }</div>
+            <p><strong>Expected Response:</strong></p>
+            <div class="json-block" id="apiResponse">{
+                "message": "success"
+                }</div>
+            <p><strong>Note:</strong> <span id="apiNote">회원가입을 위한 API</span></p>
+
+            <div class="buttons">
+                <div class="button send" onclick="sendRequest()">SEND</div>
+                <div class="button validate" onclick="validateResponse()">VALIDATE</div>
+            </div>
+
+            <!-- 응답을 출력할 구역 -->
+            <div class="response" id="responseBody">Response Body Here</div>
+            <div class="validation-result" id="validationResult"></div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

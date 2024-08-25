@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Member API Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            margin-top: 10px;
+        }
+
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .submit-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px; /* Submit 버튼과 윗 요소 사이의 간격 추가 */
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .CodeMirror {
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .key-value-pair {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .key-value-pair input {
+            width: 48%;
+            padding: 8px;
+            margin-right: 4%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .key-value-pair input:last-child {
+            margin-right: 0;
+        }
+
+        .add-remove-buttons {
+            margin-top: 10px;
+        }
+
+        .add-remove-buttons button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px; /* 버튼을 네모나게 하기 위해 패딩 조정 */
+            border-radius: 5px; /* 네모난 모양을 유지 */
+            cursor: pointer;
+            font-size: 16px; /* 폰트 크기를 약간 조정 */
+            margin-right: 10px;
+        }
+
+        .add-remove-buttons button.remove-btn {
+            background-color: #dc3545;
+        }
+
+        .add-remove-buttons {
+            margin-bottom: 20px; /* Submit 버튼과 +, - 버튼 사이의 간격 조정 */
+        }
+    </style>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <h1>API 추가하기</h1>
+
+        <form id="apiForm">
+            <label for="api-type">항목 선택하기</label>
+            <select id="api-type" name="apiType" required>
+                <option value="">항목을 선택하세요</option>
+                <option value="member">member API</option>
+                <option value="board">board API</option>
+                <option value="university">university API</option>
+            </select>
+
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="url">URL</label>
+            <input type="text" id="url" name="url" required>
+
+            <label for="method">Method</label>
+            <select id="method" name="method" required>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+            </select>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="isAuth" name="isAuth">
+                <label for="isAuth">Is Auth</label>
+            </div>
+
+            <label for="body">Body</label>
+            <textarea id="body" name="body"></textarea>
+
+            <label for="expectedResponse">Expected Response</label>
+            <textarea id="expectedResponse" name="expectedResponse"></textarea>
+
+            <label for="note">Note</label>
+            <textarea id="note" name="note" class="normal-textarea"></textarea>
+
+            <label for="validateInfo">Validate Info</label>
+            <div id="validateInfoContainer">
+                <div class="key-value-pair">
+                    <input type="text" name="validateKey[]" placeholder="Key">
+                    <input type="text" name="validateValue[]" placeholder="Value">
+                </div>
+            </div>
+            <div class="add-remove-buttons">
+                <button type="button" id="addPairBtn">+</button>
+                <button type="button" id="removePairBtn" class="remove-btn">-</button>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script>
+        // JSON 코드 에디터를 설정합니다.
+        const bodyEditor = CodeMirror.fromTextArea(document.getElementById("body"), {
+            mode: "application/json",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true
+        });
+
+        const responseEditor = CodeMirror.fromTextArea(document.getElementById("expectedResponse"), {
+            mode: "application/json",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true
+        });
+
+        // Key-Value Pair 추가 및 삭제 기능
+        const maxPairs = 20;
+        let pairCount = 1;
+
+        document.getElementById('addPairBtn').addEventListener('click', function() {
+            if (pairCount < maxPairs) {
+                const container = document.getElementById('validateInfoContainer');
+                const newPair = document.createElement('div');
+                newPair.className = 'key-value-pair';
+                newPair.innerHTML = `
+                    <input type="text" name="validateKey[]" placeholder="Key">
+                    <input type="text" name="validateValue[]" placeholder="Value">
+                `;
+                container.appendChild(newPair);
+                pairCount++;
+            } else {
+                alert('최대 20개의 항목만 추가할 수 있습니다.');
+            }
+        });
+
+        document.getElementById('removePairBtn').addEventListener('click', function() {
+            if (pairCount > 1) {
+                const container = document.getElementById('validateInfoContainer');
+                container.removeChild(container.lastChild);
+                pairCount--;
+            }
+        });
+
+        document.getElementById('apiForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 방지
+
+            // 폼 데이터 수집
+            const formData = {
+                apiType: document.getElementById('api-type').value,
+                title: document.getElementById('title').value,
+                url: document.getElementById('url').value,
+                method: document.getElementById('method').value,
+                isAuth: document.getElementById('isAuth').checked,
+                body: bodyEditor.getValue(),
+                expectedResponse: responseEditor.getValue(),
+                note: document.getElementById('note').value,
+                validateInfo: {}
+            };
+
+            const keys = document.getElementsByName('validateKey[]');
+            const values = document.getElementsByName('validateValue[]');
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i].value.trim();
+                const value = values[i].value.trim();
+                if (key) {
+                    formData.validateInfo[key] = value;
+                }
+            }
+
+            // JSON 형식으로 변환
+            const jsonData = JSON.stringify(formData);
+
+
+            // 서버로 데이터 전송
+            fetch('http://localhost:8080/api/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('API 정보가 성공적으로 저장되었습니다.');
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('API 정보를 저장하는 데 오류가 발생했습니다.');
+                });
+        });
+    </script>
+</section>
+</body>
+</html>

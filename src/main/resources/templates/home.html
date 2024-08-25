@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+<section layout:fragment="content">
+<div class="info-box">
+    <a href="https://github.com/one-bucket/one-bucket-back" target="_blank">
+        <img src="https://avatars.githubusercontent.com/u/164978893?s=48&v=4" alt="GitHub Avatar">
+    </a>
+    <div>
+        <h3>Github</h3>
+        <p><span>URL:</span> <a href="https://github.com/one-bucket/one-bucket-back" target="_blank">https://github.com/one-bucket/one-bucket-back</a></p>
+        <p>참여자 1: 이상혁 - <a href="https://github.com/unikal1" target="_blank">GitHub</a></p>
+        <p>참여자 2: 한승훈 - <a href="https://github.com/sleepyhoon" target="_blank">GitHub</a></p>
+        <p>참여자 3: 이재영 - <a href="https://github.com/dioo1461" target="_blank">GitHub</a></p>
+        <p>참여자 4: 신승민 - <a href="https://github.com/zjxlomin" target="_blank">GitHub</a></p>
+    </div>
+</div>
+
+<div class="info-box">
+    <h3>Server Info</h3>
+    <div class="server-box">
+        <h4>main-server</h4>
+        <p>jack8226.ddns.net:3000</p>
+        <p>one-bucket 서버가 올려진 서버</p>
+    </div>
+    <div class="server-box">
+        <h4>devOps-server</h4>
+        <p>jack8226.ddns.net:3001</p>
+        <p>mysql, redis, jenkins 등이 띄워진 서버</p>
+    </div>
+    <div class="server-box">
+        <h4>minio-server</h4>
+        <p>jack8226.ddns.net:3002</p>
+        <p>minio가 띄워진 서버</p>
+    </div>
+    <div class="server-box">
+        <h4>jenkins</h4>
+        <p>jack8226.ddns.net:3006</p>
+        <p>jenkins 콘솔</p>
+    </div>
+    <div class="server-box">
+        <h4>minio</h4>
+        <p>jack8226.ddns.net:3009</p>
+        <p>minio 콘솔</p>
+    </div>
+</div>
+
+<div class="team-box">
+    <h3>Team Members</h3>
+    <ul>
+        <li>
+            <img src="data:image/jpeg;base64,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" alt="이상혁 사진">
+            <div>
+                <h4>이상혁</h4>
+                <p>Email: example@example.com</p>
+                <p>Github: <a href="https://github.com/example" target="_blank">https://github.com/example</a></p>
+            </div>
+        </li>
+        <li>
+            <img src="https://avatars.githubusercontent.com/u/101882530?s=64&v=4" alt="한승훈 사진">
+            <div>
+                <h4>한승훈</h4>
+                <p>Email: example@example.com</p>
+                <p>Github: <a href="https://github.com/example" target="_blank">https://github.com/example</a></p>
+            </div>
+        </li>
+        <li>
+            <img src="https://avatars.githubusercontent.com/u/73684109?s=64&v=4" alt="이재영 사진">
+            <div>
+                <h4>이재영</h4>
+                <p>Email: example@example.com</p>
+                <p>Github: <a href="https://github.com/example" target="_blank">https://github.com/example</a></p>
+            </div>
+        </li>
+        <li>
+            <img src="https://avatars.githubusercontent.com/u/144583334?s=64&v=4" alt="신승민 사진">
+            <div>
+                <h4>신승민</h4>
+                <p>Email: example@example.com</p>
+                <p>Github: <a href="https://github.com/example" target="_blank">https://github.com/example</a></p>
+            </div>
+        </li>
+    </ul>
+</div>
+</section>
+</body>
+</html>
