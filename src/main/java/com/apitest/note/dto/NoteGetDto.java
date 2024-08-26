@@ -1,12 +1,14 @@
-package com.apitest.apiTestManage.dto;
+package com.apitest.note.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * <br>package name   : com.apitest.apiTestManage.dto
- * <br>file name      : ApiDetailsDto
- * <br>date           : 2024-08-24
+ * <br>package name   : com.apitest.note.dto
+ * <br>file name      : NoteGetDto
+ * <br>date           : 2024-08-26
  * <pre>
  * <span style="color: white;">[description]</span>
  *
@@ -21,22 +23,19 @@ import lombok.*;
  * ====================================================
  * DATE           AUTHOR               NOTE
  * ----------------------------------------------------
- * 2024-08-24        jack8              init create
+ * 2024-08-26        jack8              init create
  * </pre>
  */
-
+@Builder
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiDetailsDto {
-    private String id;
+public class NoteGetDto {
+    private Long id;
+    private String username;
     private String title;
-    private String url;
-    private String method;
-    private boolean isAuth;
-    private String body;
-    private String expectedResponse;
-    private String note;
+    private List<String> tags;
+    private String content;
+    private LocalDateTime createdDate;
 }

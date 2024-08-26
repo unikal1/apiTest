@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">Note View</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden; /* 페이지 전체에서 가로 스크롤 제거 */
+        }
+
+        .note-container {
+            width: 100%; /* 화면 너비에 맞추기 */
+            max-width: 800px; /* 최대 너비 제한 */
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box; /* 패딩과 보더를 포함한 크기 계산 */
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .note-title {
+            font-size: 24px;
+            font-weight: bold;
+            word-wrap: break-word;
+            white-space: normal;
+            max-width: 100%;
+        }
+
+        .note-tags {
+            font-size: 14px;
+            color: #007bff;
+            margin-top: 5px;
+            display: inline-block;
+            background-color: #e0f7ff;
+            border-radius: 20px;
+            padding: 5px 10px;
+            word-wrap: break-word;
+            white-space: normal;
+            max-width: 100%;
+        }
+
+        .note-username {
+            background-color: #e0ffe0;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #555;
+            margin-top: 10px;
+            word-wrap: break-word;
+            white-space: normal;
+            max-width: 100%;
+        }
+
+        .note-content {
+            margin-top: 20px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        .separator {
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+
+        .action-links {
+            font-size: 14px;
+            color: #888;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .action-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        .action-links a:hover {
+            text-decoration: underline;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="note-container">
+        <div class="note-header">
+            <div>
+                <div class="note-title" th:text="${title}">Note Title</div>
+                <div th:each="tag : ${tags}" class="note-tags" th:text="${tag}">Tag</div>
+            </div>
+            <div>
+                <div class="action-links">
+                    <a th:href="@{/note/update?id={id}(id=${noteId})}">수정하기</a> |
+                    <a th:href="@{/note/delete?id={id}(id=${noteId})}">삭제하기</a>
+                </div>
+                <div class="note-username" th:text="${username}">Username</div>
+            </div>
+        </div>
+        <div class="separator"></div>
+        <div class="note-content" th:utext="${content}">Note content here...</div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html     xmlns:th="http://www.thymeleaf.org"
-          xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
     <title>API Tester Template</title>
@@ -54,7 +54,7 @@
             margin-left: 10px;
         }
 
-        .sidebar ul li:hover ul {
+        .sidebar ul li.open > ul {
             display: block;
         }
 
@@ -135,6 +135,7 @@
             font-size: 14px;
             color: #666;
         }
+
         .team-box {
             background-color: #fff;
             padding: 15px;
@@ -178,6 +179,9 @@
         .sidebar ul li a {
             color: inherit; /* 링크 색상을 부모 요소의 색상으로 설정 */
             text-decoration: none; /* 링크의 밑줄 제거 */
+            display: block; /* li 전체를 클릭 영역으로 */
+            width: 100%;
+            height: 100%;
         }
 
         .sidebar ul li a:hover {
@@ -189,17 +193,30 @@
 <div class="sidebar">
     <h2>Menu</h2>
     <ul>
-        <li>
+        <li onclick="toggleMenu(this)">
             API test 하기
             <ul>
-                <li><a href="/member_api">member API test</a></li>
-                <li><a href="#">board API test</a></li>
-                <li><a href="#">university API test</a></li>
+                <li><a href="/api?type=member">member API test</a></li>
+                <li><a href="/api?type=board">board API test</a></li>
+                <li><a href="/api?type=university">university API test</a></li>
                 <li><a href="#">auto-set API test</a></li>
-                <li><a href="/api/add"> add API test</a></li>
             </ul>
         </li>
-        <li><a href="#">노트 확인</a></li>
+        <li onclick="toggleMenu(this)">
+            API 관리
+            <ul>
+                <li><a href="/api/add">API 추가</a></li>
+                <li><a href="/api/delete">API 삭제</a></li>
+                <li><a href="#">API 자동화 추가</a></li>
+            </ul>
+        </li>
+        <li onclick="toggleMenu(this)">
+            노트 메뉴
+            <ul>
+                <li><a href="/note/list">노트 보기</a></li>
+                <li><a href="/note/create">노트 추가</a></li>
+            </ul>
+        </li>
         <li><a href="#">서버 상태</a></li>
         <li><a href="#">멤버 관리</a></li>
         <li><a href="#">프로그램 설정</a></li>
@@ -216,9 +233,22 @@
     <div class="divider"></div>
 
     <section layout:fragment="content">
-
+        <!-- 여기에 컨텐츠가 들어갑니다 -->
     </section>
 
 </div>
+
+<script>
+    function toggleMenu(element) {
+        element.classList.toggle('open');
+    }
+
+    // 클릭한 전체 li 요소를 링크로 이동하게 처리
+    document.querySelectorAll('.sidebar ul li a').forEach(function(link) {
+        link.parentElement.addEventListener('click', function() {
+            link.click();
+        });
+    });
+</script>
 </body>
 </html>

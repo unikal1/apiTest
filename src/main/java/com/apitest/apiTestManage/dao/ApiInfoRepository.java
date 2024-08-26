@@ -4,6 +4,7 @@ import com.apitest.apiTestManage.entity.ApiInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,5 +31,8 @@ import java.util.Optional;
 
 @Repository
 public interface ApiInfoRepository extends JpaRepository<ApiInfo,Long> {
+
+    List<ApiInfo> findAllByType(String type);
+    List<ApiInfo> findByTitleContainingIgnoreCase(String title);
     Optional<ApiInfo> findByTitle(String title);
 }

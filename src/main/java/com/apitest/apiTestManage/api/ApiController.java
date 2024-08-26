@@ -4,9 +4,7 @@ import com.apitest.apiTestManage.dto.ApiDetailsDto;
 import com.apitest.apiTestManage.dto.ApiRequestDto;
 import com.apitest.apiTestManage.dto.SuccessResponseDto;
 import com.apitest.apiTestManage.service.ApiService;
-import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
-import org.codehaus.groovy.transform.SourceURIASTTransformation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,18 +41,19 @@ public class ApiController {
 
     private final ApiService apiService;
 
-    @GetMapping("/member_api")
-    public String memberApi(Model model) {
-        List<ApiDetailsDto> apiList = apiService.getAllApiInfo();
-        System.out.println(apiList);
+
+
+    @GetMapping("/api")
+    public String getApiPage(@RequestParam("type") String type, Model model) {
+        List<ApiDetailsDto> apiList = apiService.getAllApiInfo(type);
         model.addAttribute("apiList", apiList);
-        return "api_test/member_api"; // "api_test" 디렉토리 아래에 있는 "member_api.html"을 가리킵니다.
+        return "api_test/api_page";
     }
 
     @GetMapping("/request")
     @ResponseBody
-    public Map<String, Object> sendRequest(@RequestParam("title") String title) {
-        Map.Entry<Integer,String> result  = apiService.sendApiRequest(title);
+    public Map<String, Object> sendRequest(@RequestParam("id") Long id) {
+        Map.Entry<Integer,String> result  = apiService.sendApiRequest(id);
         String code = result.getKey().toString();
         String response = result.getValue();
 
@@ -73,8 +72,31 @@ public class ApiController {
     @PostMapping("/api/save")
     @ResponseBody
     public ResponseEntity<SuccessResponseDto> saveApi(@RequestBody ApiRequestDto apiRequestDto) {
+        apiService.saveApi(apiRequestDto);
 
         return ResponseEntity.ok(new SuccessResponseDto("success"));
+    }
+
+    @GetMapping("/api/search")
+    @ResponseBody
+    public List<ApiDetailsDto> searchApi(@RequestParam("title") String title) {
+        return apiService.searchApi(title);
+    }
+
+    @DeleteMapping("/api/delete")
+    public ResponseEntity<?> deleteApi(@RequestParam("id")Long id) {
+        try {
+            apiService.deleteApi(id);
+            return ResponseEntity.ok(new SuccessResponseDto("success"));
+        } catch(Exception e) {
+            return (ResponseEntity<?>) ResponseEntity.badRequest();
+        }
+    }
+
+
+    @GetMapping("/api/delete")
+    public String deleteApi() {
+        return "api_test/delete_api";
     }
 
 }

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>API Search</title>
+    <style>
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .result-list {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item-title {
+            font-weight: bold;
+        }
+
+        .result-item p {
+            margin: 5px 0;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function searchApis() {
+            const title = document.getElementById('searchInput').value;
+
+            // 제목의 길이 체크
+            if (title.length < 2) {
+                alert('검색어는 최소 2글자 이상이어야 합니다.');
+                return;
+            }
+
+            fetch(`/api/search?title=${encodeURIComponent(title)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultList = document.getElementById('resultList');
+                    resultList.innerHTML = ''; // 기존 검색 결과를 초기화
+                    data.forEach(api => {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'result-item';
+
+                        const itemDetails = document.createElement('div');
+                        itemDetails.innerHTML = `
+                            <div class="result-item-title">${api.title}</div>
+                            <p><strong>URL:</strong> ${api.url}</p>
+                            <p><strong>Method:</strong> ${api.method}</p>
+                            <p><strong>Body:</strong> ${api.body}</p>
+                            <p><strong>Note:</strong> ${api.note}</p>
+                        `;
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-button';
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = () => deleteApi(api.id);
+
+                        listItem.appendChild(itemDetails);
+                        listItem.appendChild(deleteButton);
+
+                        resultList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function deleteApi(id) {
+            fetch(`/api/delete?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.status === 200) {
+                        searchApis(); // 삭제 후 리스트를 새로고침
+                    } else {
+                        console.error('Failed to delete API');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+<section layout:fragment="content">
+    <!-- 검색 영역 -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by title">
+        <button class="search-button" onclick="searchApis()">Search</button>
+    </div>
+
+    <!-- 검색 결과 리스트 -->
+    <div id="resultList" class="result-list">
+        <!-- 검색 결과 항목들이 여기에 동적으로 추가됩니다 -->
+    </div>
+</section>
+</body>
+</html>

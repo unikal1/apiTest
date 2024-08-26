@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Note List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .tags-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tags-container span {
+            background-color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .note-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .note-item {
+            background-color: #e9ecef;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .note-item h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .note-item .username {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #555;
+            float: right;
+        }
+
+        .note-item .separator {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        .note-item p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .write-btn {
+            display: block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            text-align: center;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <!-- 검색 영역 -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search by title" oninput="validateSearch()">
+            <button id="searchButton" onclick="searchNotes()" disabled>Search</button>
+        </div>
+
+        <!-- 태그 영역 -->
+        <div class="tags-container">
+            <span th:each="tag : ${tags}" th:text="${tag}" th:data-url="@{/note/search(tag=${tag})}" onclick="window.location.href=this.getAttribute('data-url')"></span>
+        </div>
+
+        <!-- 노트 리스트 -->
+        <ul class="note-list">
+            <li th:each="note : ${notes.content}" class="note-item" th:data-url="@{/note/get(id=${note.id})}" onclick="window.location.href=this.getAttribute('data-url')">
+                <div>
+                    <h3 th:text="${note.title}">Note Title</h3>
+                    <div class="username" th:text="${note.username}">Username</div>
+                </div>
+                <div class="separator"></div>
+                <p th:text="${note.content}">Note Content</p>
+            </li>
+        </ul>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination">
+            <button th:disabled="${!notes.hasPrevious()}" th:onclick="'window.location.href=\'/note/list?page=' + (${notes.number} - 1) + '\';'">Previous</button>
+            <button th:disabled="${!notes.hasNext()}" th:onclick="'window.location.href=\'/note/list?page=' + (${notes.number} + 1) + '\';'">Next</button>
+        </div>
+
+        <!-- 글쓰기 버튼 -->
+        <a href="/note/create" class="write-btn">Write a Note</a>
+    </div>
+
+    <script>
+        function validateSearch() {
+            const searchInput = document.getElementById('searchInput').value;
+            document.getElementById('searchButton').disabled = searchInput.length < 2;
+        }
+
+        function searchNotes() {
+            const title = document.getElementById('searchInput').value;
+            if (title.length < 2) {
+                alert("검색어는 최소 2글자 이상이어야 합니다.");
+                return;
+            }
+            window.location.href = `/note/search?title=${title}`;
+        }
+    </script>
+</section>
+</body>
+</html>

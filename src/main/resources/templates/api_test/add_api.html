@@ -226,10 +226,17 @@
         document.getElementById('apiForm').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 방지
 
+            // Title의 길이 검증
+            const title = document.getElementById('title').value;
+            if (title.length < 4) {
+                alert('Title은 최소 4글자 이상이어야 합니다.');
+                return; // 제출 중단
+            }
+
             // 폼 데이터 수집
             const formData = {
                 apiType: document.getElementById('api-type').value,
-                title: document.getElementById('title').value,
+                title: title, // title을 이미 가져왔으므로 여기서 바로 사용
                 url: document.getElementById('url').value,
                 method: document.getElementById('method').value,
                 isAuth: document.getElementById('isAuth').checked,
@@ -252,9 +259,8 @@
             // JSON 형식으로 변환
             const jsonData = JSON.stringify(formData);
 
-
             // 서버로 데이터 전송
-            fetch('http://localhost:8080/api/save', {
+            fetch('/api/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -104,9 +104,11 @@
     </style>
     <script>
         let selectedApiTitle = '';
+        let selectedId = '';
 
         function displayApiDetails(api, element) {
             selectedApiTitle = api.title; // Store the selected API title for later use
+            selectedId = api.id;
             document.getElementById('apiTitle').textContent = api.title;
             document.getElementById('apiUrl').textContent = api.url;
             document.getElementById('apiMethod').textContent = api.method;
@@ -130,7 +132,7 @@
                 return;
             }
 
-            const url = `/request?title=${encodeURIComponent(selectedApiTitle)}`;
+            const url = `/request?id=${encodeURIComponent(selectedId)}`;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -176,6 +178,7 @@
         <div class="api-list">
             <ul>
                 <li th:each="api : ${apiList}"
+                    th:data-id="${api.id}"
                     th:data-title="${api.title}"
                     th:data-url="${api.url}"
                     th:data-method="${api.method}"
