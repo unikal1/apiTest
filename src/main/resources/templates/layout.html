@@ -217,7 +217,15 @@
                 <li><a href="/note/create">노트 추가</a></li>
             </ul>
         </li>
-        <li><a href="#">서버 상태</a></li>
+        <li><a href="/chat">사용자 채팅</a></li>
+        <li onclick="toggleMenu(this)">
+            서버 상태
+            <ul>
+                <li><a href="/terminal?server=101">DevOps 서버 모니터링</a></li>
+                <li><a href="/terminal?server=135">main 서버 모니터링</a></li>
+                <li><a href="/terminal?server=144">Minio 서버 모니터링</a></li>
+            </ul>
+        </li>
         <li><a href="#">멤버 관리</a></li>
         <li><a href="#">프로그램 설정</a></li>
     </ul>

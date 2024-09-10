@@ -1,10 +1,7 @@
 package com.apitest.apiTestManage.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.web.header.Header;
 
 import javax.xml.crypto.dsig.keyinfo.KeyValue;
@@ -36,6 +33,7 @@ import java.util.List;
 @Entity
 @Builder
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiInfo {

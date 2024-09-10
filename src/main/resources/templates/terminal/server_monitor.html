@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">System Resource Monitor</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            background-color: #f4f6f9;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+        }
+
+        .chart-container {
+            margin-bottom: 40px;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .process-table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+
+        .process-table th, .process-table td {
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .process-table th {
+            background-color: #f1f1f1;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .process-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .process-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .process-table th, .process-table td {
+            border: none;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container mt-5">
+        <h1 th:text="${title}" class="text-center mb-4"></h1>
+        <div class="section-title">CPU Usage & Temperature</div>
+        <div class="chart-container">
+            <canvas id="cpuChart"></canvas>
+        </div>
+
+        <div class="section-title">Memory Usage</div>
+        <div class="chart-container">
+            <canvas id="memoryChart"></canvas>
+        </div>
+
+        <div class="section-title">Disk Usage</div>
+        <div class="chart-container">
+            <canvas id="diskChart"></canvas>
+        </div>
+
+        <div class="section-title">Running Processes</div>
+        <table class="process-table">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>PID</th>
+                <th>CPU Usage</th>
+                <th>Memory Usage</th>
+                <th>Command</th>
+            </tr>
+            </thead>
+            <tbody id="processTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- JavaScript for data fetching and updating the charts -->
+    <script th:inline="javascript">
+        let cpuChart, memoryChart, diskChart;
+        var server = [[${server}]];
+
+        function renderCharts(data) {
+            const cpuLabels = data.cpu_usage.map((cpu, index) => `Core ${index + 1}`);
+            const cpuUsageData = data.cpu_usage.map(cpu => parseFloat(cpu.usage.replace('%', '')));
+            const cpuTempData = data.cpu_temp.map(temp => parseFloat(temp.temperature.replace('C', '')));
+
+            if (cpuChart) cpuChart.destroy();
+            cpuChart = new Chart(document.getElementById('cpuChart'), {
+                type: 'bar',
+                data: {
+                    labels: cpuLabels,
+                    datasets: [{
+                        label: 'Usage (%)',
+                        data: cpuUsageData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Temperature (C)',
+                        data: cpuTempData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    animation: {
+                        duration: 0 // 애니메이션 비활성화
+                    }
+                }
+            });
+
+            const totalMemory = parseFloat(data.memory_usage.total_memory.replace(' MiB', ''));
+            const usedMemory = parseFloat(data.memory_usage.used_memory.replace(' MiB', ''));
+            const freeMemory = parseFloat(data.memory_usage.free_memory.replace(' MiB', ''));
+            const swapTotal = parseFloat(data.memory_usage.swap_total.replace(' MiB', ''));
+            const swapUsed = parseFloat(data.memory_usage.swap_used.replace(' MiB', ''));
+            const swapFree = parseFloat(data.memory_usage.swap_free.replace(' MiB', ''));
+
+            if (memoryChart) memoryChart.destroy();
+            memoryChart = new Chart(document.getElementById('memoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Total Memory', 'Used Memory', 'Free Memory', 'Swap Total', 'Swap Used', 'Swap Free'],
+                    datasets: [{
+                        label: 'Memory (MiB)',
+                        data: [totalMemory, usedMemory, freeMemory, swapTotal, swapUsed, swapFree],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(255, 99, 132, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1,
+                        barThickness: 30 // 막대 두께 설정
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 막대를 수평으로 설정
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            barPercentage: 0.6, // 막대의 너비를 60%로 설정
+                            categoryPercentage: 0.8 // 카테고리의 너비를 80%로 설정하여 간격 추가
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            formatter: (value, context) => `${value} MiB`
+                        }
+                    },
+                    animation: {
+                        duration: 0 // 애니메이션 비활성화
+                    }
+                }
+            });
+
+
+            if (diskChart) diskChart.destroy();
+            diskChart = new Chart(document.getElementById('diskChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Total Disk', 'Used Disk', 'Available Disk'],
+                    datasets: [{
+                        label: 'Disk (MiB)',
+                        data: [
+                            parseFloat(data.disk_usage.total_disk.replace(' MiB', '')),
+                            parseFloat(data.disk_usage.used_disk.replace(' MiB', '')),
+                            parseFloat(data.disk_usage.available_disk.replace(' MiB', ''))
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',  // Total Disk
+                            'rgba(255, 159, 64, 0.6)',  // Used Disk
+                            'rgba(75, 192, 192, 0.6)'   // Available Disk
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1,
+                        barThickness: 30 // 막대 두께 설정
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 막대를 수평으로 설정
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            barPercentage: 0.6, // 막대의 너비를 60%로 설정
+                            categoryPercentage: 0.8 // 카테고리의 너비를 80%로 설정하여 간격 추가
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            formatter: (value, context) => `${value} MiB`
+                        }
+                    },
+                    animation: {
+                        duration: 0 // 애니메이션 비활성화
+                    }
+                }
+            });
+
+        }
+
+        function updateProcessTable(data) {
+            const tableBody = document.getElementById('processTableBody');
+            tableBody.innerHTML = '';
+            data.process_list.forEach(process => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${process.user}</td>
+                    <td>${process.pid}</td>
+                    <td>${process.cpu_usage}</td>
+                    <td>${process.mem_usage}</td>
+                    <td>${process.command}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function fetchAndUpdate() {
+            try {
+                const response = await fetch(`/api/monitor?server=${server}`);
+                const data = await response.json();
+                renderCharts(data);
+                updateProcessTable(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // 페이지 로드 시 데이터 가져오기 및 차트 및 테이블 렌더링
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAndUpdate();
+            setInterval(fetchAndUpdate, 5000); // 5초마다 갱신
+
+            // 타이머 관련 변수 설정
+            let elapsedSeconds = 0;
+            const maxTime = 300; // 5분 = 300초
+            const timerElement = document.createElement('span'); // 타이머를 표시할 요소 생성
+
+            // 타이머를 제목 옆에 추가
+            const titleElement = document.querySelector('h1.text-center'); // class="text-center"로 h1 요소를 찾음
+            timerElement.style.marginLeft = "10px"; // 타이머를 제목에서 약간 떨어뜨림
+            titleElement.appendChild(timerElement);
+
+            // 1초마다 시간을 업데이트하는 함수
+            const updateTimer = setInterval(function() {
+                elapsedSeconds++;
+                const minutes = Math.floor(elapsedSeconds / 60);
+                const seconds = elapsedSeconds % 60;
+                timerElement.textContent = ` ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                // 5분(300초) 경과 시 /home으로 이동
+                if (elapsedSeconds >= maxTime) {
+                    clearInterval(updateTimer); // 타이머 중지
+                    window.location.href = '/home';
+                }
+            }, 1000); // 1초마다 실행
+        });
+    </script>
+</section>
+</body>
+</html>

@@ -4,6 +4,7 @@ import com.apitest.member.Member;
 import com.apitest.member.dao.MemberRepository;
 import com.apitest.member.dto.SignUpRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,5 +47,11 @@ public class MemberService {
                 .build();
 
         memberRepository.save(member);
+    }
+
+    public String getName(String username) {
+        Member member = memberRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("can't find user"));
+        return member.getName();
     }
 }

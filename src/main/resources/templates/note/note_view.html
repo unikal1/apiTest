@@ -5,11 +5,14 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="${title}">Note View</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
+            max-width: 100%; /* 최대 너비를 100%로 설정하여 가로 스크롤 제거 */
             overflow-x: hidden; /* 페이지 전체에서 가로 스크롤 제거 */
         }
 
@@ -21,7 +24,8 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box; /* 패딩과 보더를 포함한 크기 계산 */
+            box-sizing: border-box;
+            overflow-wrap: break-word; /* 단어가 길 경우 자동으로 줄 바꿈 */
         }
 
         .note-header {
@@ -34,7 +38,7 @@
         .note-title {
             font-size: 24px;
             font-weight: bold;
-            word-wrap: break-word;
+            word-wrap: break-word; /* 긴 단어가 화면을 넘지 않도록 줄 바꿈 */
             white-space: normal;
             max-width: 100%;
         }
@@ -70,7 +74,7 @@
             max-height: 400px;
             overflow-y: auto;
             overflow-x: hidden;
-            word-wrap: break-word;
+            word-wrap: break-word; /* 긴 단어가 화면을 넘지 않도록 줄 바꿈 */
             white-space: normal;
         }
 
@@ -96,27 +100,131 @@
             text-decoration: underline;
             color: #555;
         }
+
+        /* 팝업 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-buttons .yes-btn {
+            background-color: red;
+            color: white;
+        }
+
+        .modal-buttons .no-btn {
+            background-color: green;
+            color: white;
+        }
     </style>
 </head>
 <body>
 <section layout:fragment="content">
-    <div class="note-container">
-        <div class="note-header">
-            <div>
-                <div class="note-title" th:text="${title}">Note Title</div>
-                <div th:each="tag : ${tags}" class="note-tags" th:text="${tag}">Tag</div>
-            </div>
-            <div>
-                <div class="action-links">
-                    <a th:href="@{/note/update?id={id}(id=${noteId})}">수정하기</a> |
-                    <a th:href="@{/note/delete?id={id}(id=${noteId})}">삭제하기</a>
+    <div class="container">
+        <div class="note-container mt-5 p-3 bg-white rounded shadow-sm">
+            <div class="note-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="note-title" th:text="${title}">Note Title</h2>
+                    <div th:each="tag : ${tags}" class="badge badge-info mr-1" th:text="${tag}">Tag</div>
                 </div>
-                <div class="note-username" th:text="${username}">Username</div>
+                <div>
+                    <div class="action-links">
+                        <a th:href="@{/note/update?id={id}(id=${noteId})}" class="btn btn-secondary btn-sm">수정하기</a>
+                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal">삭제하기</button>
+                    </div>
+                    <div class="note-username text-muted mt-2" th:text="${username}">Username</div>
+                </div>
+            </div>
+            <hr>
+            <div class="note-content" th:utext="${content}">Note content here...</div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">노트 삭제</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    해당 노트를 지우시겠습니까?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteNote()">삭제</button>
+                </div>
             </div>
         </div>
-        <div class="separator"></div>
-        <div class="note-content" th:utext="${content}">Note content here...</div>
     </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        const noteId = [[${noteId}]];
+
+
+        function deleteNote() {
+            fetch(`/note/delete?id=${noteId}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // 노트 삭제 성공 시 모달 닫기
+                        $('#deleteModal').modal('hide');
+                        window.location.href = '/note/list?page=0';
+                    } else {
+                        alert('노트 삭제에 실패했습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('노트 삭제 중 오류가 발생했습니다.');
+                });
+        }
+    </script>
 </section>
 </body>
 </html>

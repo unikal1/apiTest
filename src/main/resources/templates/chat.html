@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Room</title>
+    <style>
+        /*body {*/
+        /*    font-family: Arial, sans-serif;*/
+        /*    margin: 0;*/
+        /*    padding: 0;*/
+        /*    background-color: #f0f0f0;*/
+        /*    display: flex;*/
+        /*    justify-content: center;*/
+        /*    align-items: center;*/
+        /*    height: 100vh;*/
+        /*}*/
+
+        .chat-wrapper {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            height: 80vh; /* 채팅창의 높이를 살짝 줄여서 아래쪽 여백 확보 */
+            position: fixed; /* 화면에서 고정 위치 */
+            top: 100px; /* 상단에서 더 아래로 내려오도록 설정 */
+            left: 260px; /* 사이드바에서 더 떨어지도록 설정 */
+            width: calc(100% - 300px); /* 오른쪽에 더 많은 여백을 주도록 조정 */
+            max-width: calc(100% - 300px);
+            min-width: 480px;
+            display: flex;
+            flex-direction: column;
+            z-index: 500; /* 다른 요소들과 겹침 방지 */
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .chat-message.user {
+            text-align: left;
+        }
+
+        .chat-message.other {
+            text-align: right;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 10px 15px;
+            max-width: 50%;
+            background-color: #e0f7fa;
+            border-radius: 15px 15px 15px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-message.other .message-content {
+            background-color: #e0e0e0;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .input-box {
+            display: flex;
+            padding: 10px;
+            background-color: #ffffff;
+            box-sizing: border-box;
+            border-top: 1px solid #000;
+        }
+
+        #message {
+            flex: 1;
+            border-radius: 20px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            max-height: 135px;
+            overflow-y: auto;
+        }
+
+        #send-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .chat-wrapper {
+                margin-left: 0;
+                width: calc(100% - 40px); /* 여백을 주어 양쪽에 약간의 패딩 */
+                min-width: unset; /* 작은 화면에서 min-width를 해제 */
+            }
+
+            .chat-box, .input-box {
+                width: 100%;
+            }
+
+            .message-content {
+                max-width: 80%; /* 작은 화면에서 채팅 메시지의 최대 너비 증가 */
+            }
+        }
+    </style>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="chat-wrapper">
+        <div class="chat-box" id="chat-box">
+            <!-- 채팅 메시지가 여기에 추가됩니다 -->
+        </div>
+        <div class="input-box" id="message-container">
+            <input type="text" id="message" placeholder="Type your message here..." class="form-control" onkeypress="return checkEnter(event)" />
+            <button type="button" id="send-button" class="btn btn-primary" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        var stompClient = null;
+        var username = [[${username}]]; // 타임리프를 통해 username 삽입
+
+        function connect() {
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/public', function (messageOutput) {
+                    showMessage(JSON.parse(messageOutput.body));
+                });
+            });
+        }
+
+        function sendMessage() {
+            var messageContent = $("#message").val();
+            if (messageContent && stompClient) {
+                var chatMessage = {
+                    sender: username || "UnknownUser",
+                    content: messageContent,
+                    type: 'CHAT'
+                };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                $("#message").val('');
+            }
+        }
+
+        function showMessage(message) {
+            var messageElement = $("<div>").addClass("chat-message");
+
+            var senderName = message.sender === username ? "me" : message.sender || "User";
+            var senderElement = $("<span>").addClass("message-sender").text(senderName);
+
+            var messageContentElement = $("<div>").addClass("message-content").text(message.content);
+
+            if (senderName === "me") {
+                messageElement.addClass("user");
+            } else {
+                messageElement.addClass("other");
+                messageContentElement.addClass("other");
+            }
+
+            messageElement.append(senderElement).append(messageContentElement);
+            $("#chat-box").append(messageElement);
+            $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+        }
+
+        function loadChatHistory() {
+            [[${chatMessages}]].forEach(function(message) {
+                showMessage(message);
+            });
+        }
+
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+                return false;
+            }
+            return true;
+        }
+
+        $(document).ready(function () {
+            loadChatHistory();
+            connect();
+        });
+    </script>
+</section>
+</body>
+</html>

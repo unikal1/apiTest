@@ -42,6 +42,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     implementation 'org.commonmark:commonmark:0.21.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.webjars:bootstrap:5.3.0'
+    implementation 'org.webjars:jquery:3.6.0'
+    implementation 'org.springframework:spring-messaging'
+
+    implementation 'com.jcraft:jsch:0.1.55'
 }
 
 tasks.named('test') {

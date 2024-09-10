@@ -6,6 +6,7 @@ import com.apitest.note.config.CommonUtil;
 import com.apitest.note.dto.NoteGetDto;
 import com.apitest.note.dto.NoteSaveDto;
 import com.apitest.note.service.NoteService;
+import groovy.lang.DelegatesTo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
